@@ -7,6 +7,12 @@
 <title>The Flatlander Experience</title>
 
 <style>
+.contentbody{margin:40px
+auto;max-width:700px;line-height:1.6;font-size:18px;color:#444;padding:0
+10px}
+
+h1,h2,h3{line-height:1.2}
+
 td, th {
   border: 1px solid #dddddd;
   text-align: left;
@@ -129,22 +135,6 @@ void main()
 <canvas id="gl-canvas" width="1024" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
-
-<br>
-<!--
-<button id="xButton">Rotate X</button>
-<button id="yButton">Rotate Y</button>
-<button id="zButton">Rotate Z</button>
--->
-<h1>
-The Flatlander Experience
-</h1>
-Experience what it's like to be a 2D being living in a 3D world.
-<br>
-Inspired by <a href="https://www.youtube.com/watch?v=C6kn6nXMWF0">Exploring other dimensions - Alex Rosenthal and George Zaidan</a>.
-<br>
-Drag to move left and right. Drag up and down to rotate clip planes for the last demo.
-<br>
 <br>
 <button id="pButton" style="background-color:#00ff00">Pause</button>
 <button id="dButton" style="background-color:#6688cc">Toggle Clipping</button>
@@ -153,8 +143,20 @@ Drag to move left and right. Drag up and down to rotate clip planes for the last
 <button id="threeButton" style="background-color:#6688cc">Clip Plane Demo 3</button>
 <button id="fourButton" style="background-color:#6688cc">Clip Plane Demo 4</button>
 <button id="dynButton" style="background-color:#6688cc">Clip Plane Demo Dynamic Rotation</button>
-<br>
-<a href="https://www.geogebra.org/3d?lang=en">Visualize</a> Clip Planes:
+
+<div class="contentbody">
+<h1>
+The Flatlander Experience
+</h1>
+<p>
+Experience what it's like to be a 2D being living in a 3D world.
+Drag to move left and right. Drag up and down to rotate clip planes for the last demo.
+Inspired by <a href="https://www.youtube.com/watch?v=C6kn6nXMWF0">Exploring other dimensions - Alex Rosenthal and George Zaidan</a>.
+</p>
+
+<p>
+<a href="https://www.geogebra.org/3d?lang=en">Visualize</a> the clip planes.
+Eye position is initialized to [0, 0, 10] and look position to [0,0,0].
 <table>
   <tr>
     <td>Demo 1</td>
@@ -177,10 +179,32 @@ Drag to move left and right. Drag up and down to rotate clip planes for the last
     <td>x - y - z - 1 = 0</td>
   </tr>
   <tr>
-    <td>Demo Dynamic Rotation (rotate around [1, 0, 0] for some degrees)</td>
+    <td>Demo Dynamic Rotation (around [1, 0, 0])</td>
     <td>y + 1 = 0</td>
     <td>y - 1 = 0</td>
   </tr>
 </table>
+</p>
 
-</body></html>
+<h2>
+How It Works
+</h2>
+In MV.js, there are <tt>perspective</tt> and <tt>ortho</tt>
+defined for view space specification. They both include
+arguments <tt>near</tt> and <tt>far</tt>, which specify the
+<strong>clip space</strong>, as in everything before or after
+it is clipped out. This basically amounts to two <strong>clip planes</strong>,
+one in front and one behind. However, WebGL does not support custom clip planes natively.
+Although there are functions in 3rd party libraries like three.js designed for this,
+it is not hard to implement this. Recall, in high school math, we learned that
+two points <tt>x</tt>,<tt>y</tt> are on the same side of a plane <tt>p</tt> if
+the signs of <tt>p(x)</tt> and <tt>p(y)</tt> agree. Provided that the normal of
+<tt>p</tt> is <tt>n</tt>, this is equivalent to checking if <tt>n . x</tt> and
+<tt>n . y</tt> have the same sign. With this, letting the two points be our
+eye position and an input point, we could implement custom clip planes that clip
+out everything on the other side of a plane from the eye.
+
+</div>
+</body>
+
+</html>
