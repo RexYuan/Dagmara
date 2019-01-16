@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="gr__140_122_185_90">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<title>The Flatlander Experience</title>
+
+<style>
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+precision mediump float;
+
+attribute vec4 vPosition;
+attribute vec4 vColor;
+attribute vec4 vNormal;
+attribute vec2 vTexCoord;
+
+varying vec4 fPosition;
+varying vec4 fColor;
+varying vec4 fNormal;
+varying vec2 fTexCoord;
+
+uniform mat4 modelingMatrix;
+uniform mat4 viewingMatrix;
+uniform mat4 projectionMatrix;
+
+void main()
+{
+    vec4 N = normalize( modelingMatrix * vNormal );	// Normal vector
+
+	fPosition = modelingMatrix * vPosition;
+    fColor = vColor;
+    fTexCoord = vTexCoord;
+	fNormal = N;
+
+    gl_Position = projectionMatrix * viewingMatrix * modelingMatrix * vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec4 fPosition;
+varying vec4 fColor;  // Note that this will be interpolated between vertices.
+varying vec4 fNormal;
+varying vec2 fTexCoord;
+
+uniform mat4 modelingMatrix;
+uniform mat4 viewingMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 eyePosition;
+uniform vec4 lightPosition;
+uniform vec4 materialAmbient;
+uniform vec4 materialDiffuse;
+uniform vec4 materialSpecular;
+uniform float shininess;
+
+uniform sampler2D texture;
+
+uniform vec4 clip_plane1;
+uniform vec4 clip_plane2;
+
+uniform bool clip;
+uniform bool clip_rot;
+uniform mat4 clip_rot_mat;
+
+void main()
+{
+    if (clip)
+    {
+        if (clip_rot)
+        {
+            vec4 CP1 = clip_rot_mat * clip_plane1;
+            vec4 CP2 = clip_rot_mat * clip_plane2;
+            if ( dot( CP1 , fPosition ) * dot( CP2 , fPosition ) > 0.0 ) discard;
+        }
+        else
+        {
+            if ( dot( clip_plane1 , fPosition ) * dot( clip_plane1 , eyePosition ) < 0.0 ) discard;
+            if ( dot( clip_plane2 , fPosition ) * dot( clip_plane2 , eyePosition ) < 0.0 ) discard;
+        }
+    }
+
+    vec4 L = normalize( lightPosition - fPosition ); // Light vector
+    vec4 N = fNormal;	// Normal vector
+	vec4 V = normalize( eyePosition - fPosition );		// Eye vector.
+    vec4 H = normalize( L + V );  // Halfway vector in the modified Phong model
+
+	N.w = 0.0;
+	N = normalize(N);
+
+    // Compute terms in the illumination equation
+    vec4 ambient = materialAmbient;
+
+    float Kd = max( dot(L, N), 0.0 );
+    vec4  diffuse = Kd * materialDiffuse;
+
+	float Ks = pow( max(dot(N, H), 0.0), shininess );
+    vec4  specular = Ks * materialSpecular;
+
+    gl_FragColor = (ambient + diffuse) * fColor + specular;
+    //gl_FragColor = ((ambient + diffuse) + specular) * texture2D( texture, fTexCoord ) ;
+}
+</script>
+
+<script type="text/javascript" src="./js/webgl-utils.js"></script>
+<script type="text/javascript" src="./js/initShaders.js"></script>
+<script type="text/javascript" src="./js/MV.js"></script>
+<script type="text/javascript" src="./js/basic-objects-IFS.js"></script>
+<script type="text/javascript" src="./js/setup.js"></script>
+<script type="text/javascript" src="./js/helper.js"></script>
+<script type="text/javascript" src="./js/control.js"></script>
+<script type="text/javascript" src="./js/index.js"></script>
+</head>
+
+<body data-gr-c-s-loaded="true" style="">
+
+<canvas id="gl-canvas" width="1024" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<br>
+<!--
+<button id="xButton">Rotate X</button>
+<button id="yButton">Rotate Y</button>
+<button id="zButton">Rotate Z</button>
+-->
+<h1>
+The Flatlander Experience
+</h1>
+Inspired by <a href="https://www.youtube.com/watch?v=C6kn6nXMWF0">Exploring other dimensions - Alex Rosenthal and George Zaidan</a>.
+<br>
+Drag to move left and right. Drag up and down to rotate clip planes for the last demo.
+<br>
+<br>
+<button id="pButton" style="background-color:#00ff00">Pause</button>
+<button id="dButton" style="background-color:#6688cc">Toggle Clipping</button>
+<button id="oneButton" style="background-color:#6688cc">Clip Plane Demo 1</button>
+<button id="twoButton" style="background-color:#6688cc">Clip Plane Demo 2</button>
+<button id="threeButton" style="background-color:#6688cc">Clip Plane Demo 3</button>
+<button id="fourButton" style="background-color:#6688cc">Clip Plane Demo 4</button>
+<button id="dynButton" style="background-color:#6688cc">Clip Plane Demo Dynamic Rotation</button>
+<br>
+<a href="https://www.geogebra.org/3d?lang=en">Visualize</a> Clip Planes:
+<table>
+  <tr>
+    <td>Demo 1</td>
+    <td>y + 0.075 = 0</td>
+    <td>y - 0.075 = 0</td>
+  </tr>
+  <tr>
+    <td>Demo 2</td>
+    <td>x + y + z = 0</td>
+    <td>x + y - z = 0</td>
+  </tr>
+  <tr>
+    <td>Demo 3</td>
+    <td>x + y + 3 = 0</td>
+    <td>x - y - z - 1 = 0</td>
+  </tr>
+  <tr>
+    <td>Demo 4</td>
+    <td>-2z = 0</td>
+    <td>x - y - z - 1 = 0</td>
+  </tr>
+  <tr>
+    <td>Demo Dynamic Rotation (rotate around [1, 0, 0] for some degrees)</td>
+    <td>y + 1 = 0</td>
+    <td>y - 1 = 0</td>
+  </tr>
+</table>
+
+</body></html>
